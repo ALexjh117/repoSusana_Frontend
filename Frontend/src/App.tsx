@@ -9,7 +9,7 @@ import {
   type Urgencias,
 } from './api'
 import { ChatPanel, Cruz, Icon, Reloj, RobotFace, type IconName, type Mensaje } from './bits'
-import { Alertas, Camas, Diccionario, Farmacia, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './screens'
+import { Alertas, Camas, Diccionario, Farmacia, HomePublic, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './screens'
 
 type Page = 'inicio' | 'camas' | 'urgencias' | 'quirofanos' | 'farmacia' | 'alertas' | 'diccionario' | 'reportes' | 'hospital'
 
@@ -34,7 +34,8 @@ const PREGUNTAS = [
 ]
 
 function App() {
-  const [dentro, setDentro] = useState(false)
+  const [vista, setVista] = useState<'home' | 'login' | 'app'>('home')
+  const dentro = vista === 'app'
   const [page, setPage] = useState<Page>('inicio')
   const [chatOpen, setChatOpen] = useState(false)
   const [chatInstant, setChatInstant] = useState(false)
@@ -116,7 +117,8 @@ function App() {
     void enviar(texto)
   }
 
-  if (!dentro) return <Login onEnter={() => setDentro(true)} />
+  if (vista === 'home') return <HomePublic onLogin={() => setVista('login')} />
+  if (vista === 'login') return <Login onEnter={() => setVista('app')} onBack={() => setVista('home')} />
 
   return (
     <div className="shell">

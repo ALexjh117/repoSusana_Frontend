@@ -18,7 +18,7 @@ export function HomePublic({ onLogin }: { onLogin: () => void }) {
       </header>
 
       <section className="public-hero" id="inicio">
-        <img src="/fachada-susana.png" alt="Hospital Susana López de Valencia" />
+        <img src="/hospital-umi.jpg" alt="Edificio de UMI Pediatría del Hospital Susana López de Valencia, sede La Ladera, Popayán." />
         <div className="public-hero-veil" />
         <div className="public-hero-inner">
           <div className="public-hero-copy">
@@ -51,6 +51,11 @@ export function HomePublic({ onLogin }: { onLogin: () => void }) {
           <span><b className="value-icon">♧</b> Compromiso con Popayán</span>
         </div>
       </section>
+
+      <figure className="public-photo">
+        <img src="/hospital-umi.jpg" alt="Fachada de UMI Pediatría en el Hospital Susana López de Valencia, Popayán." />
+        <figcaption>UMI Pediatría · Sede La Ladera, Popayán</figcaption>
+      </figure>
 
       <section className="public-section public-about" id="nosotros">
         <div className="public-about-copy">
@@ -122,7 +127,7 @@ export function HomePublic({ onLogin }: { onLogin: () => void }) {
           <div className="public-susana-slogan">La tecnología<br />también cuida <span>♡</span></div>
         </div>
         <div className="public-susana-image">
-          <img src="/pasillo-susana.png" alt="Interior del Hospital Susana López de Valencia" />
+          <img src="/hospital-umi.jpg" alt="Edificio de UMI Pediatría del Hospital Susana López de Valencia en Popayán." />
         </div>
         <div className="public-leaf" aria-hidden="true">◢</div>
       </section>

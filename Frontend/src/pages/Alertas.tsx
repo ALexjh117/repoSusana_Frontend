@@ -34,7 +34,7 @@ export function Alertas({
   return (
     <div className="page sala-alertas">
       <header className="placa-susana">
-        <img src="/fachada-susana.png" alt="" />
+        <img src="/hospital-umi.jpg" alt="Edificio de UMI Pediatría del Hospital Susana López de Valencia en Popayán." />
         <div className="placa-veil" />
         <div className="placa-copy">
           <p className="eyebrow">En memoria de Susana López de Valencia</p>

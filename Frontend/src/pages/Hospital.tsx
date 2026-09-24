@@ -5,7 +5,7 @@ export function Hospital() {
   return (
     <div className="page">
       <section className="hero hospital-hero">
-        <img src="/fachada-susana.png" alt="Fachada del Hospital Susana López de Valencia, edificio blanco y montañas del Cauca." />
+        <img src="/hospital-umi.jpg" alt="Edificio de UMI Pediatría del Hospital Susana López de Valencia, sede La Ladera, Popayán." />
         <div className="hero-veil" />
         <div className="hero-copy">
           <p className="eyebrow">E.S.E. · Popayán, Cauca</p>
@@ -21,7 +21,7 @@ export function Hospital() {
 
       <section className="sede-grid">
         <article className="card sede-feature">
-          <img src="/pasillo-susana.png" alt="Pasillo del hospital con luz de la mañana." />
+          <img src="/hospital-umi.jpg" alt="UMI Pediatría del Hospital Susana López de Valencia, en La Ladera, Popayán." />
           <div className="sede-copy">
             <p className="eyebrow">Sede principal</p>
             <h2>La Ladera</h2>

@@ -50,7 +50,7 @@ export function Inicio({
   return (
     <div className="page inicio-page">
       <section className="inicio-hero">
-        <img src="/fachada-susana.png" alt="" />
+        <img src="/hospital-umi.jpg" alt="Edificio de UMI Pediatría del Hospital Susana López de Valencia, Popayán." />
         <div className="inicio-hero-overlay" />
         <div className="inicio-hero-content">
           <div className="inicio-hero-copy">

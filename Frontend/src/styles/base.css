@@ -118,12 +118,12 @@ h2 { font-size: 16px; letter-spacing: -0.02em; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 62%;
+  object-position: 14% center;
 }
 .login-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(6, 28, 24, 0.62) 0%, rgba(6, 28, 24, 0.12) 34%, rgba(6, 28, 24, 0.28) 58%, rgba(6, 28, 24, 0.78) 100%);
+  background: linear-gradient(180deg, rgba(6, 28, 24, 0.42) 0%, rgba(6, 28, 24, 0.08) 34%, rgba(6, 28, 24, 0.16) 58%, rgba(6, 28, 24, 0.62) 100%);
 }
 .login-top .brand.on-photo {
   background: rgba(8, 32, 28, 0.42);
@@ -252,6 +252,7 @@ input, .search {
   width: 56px;
   height: 42px;
   object-fit: cover;
+  object-position: 12% center;
   border-radius: 8px;
 }
 .side-foot strong { display: block; font-size: 13px; }
@@ -296,6 +297,19 @@ input, .search {
   place-items: center;
   font-weight: 800;
 }
+.logout {
+  border: 1px solid #cfe3da;
+  background: white;
+  color: var(--green-deep);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 160ms ease, transform 160ms var(--ease-out);
+}
+.logout:hover { background: var(--mint); }
+.logout:active { transform: scale(0.97); }
 .content {
   overflow: auto;
   padding: 20px 22px 120px;
@@ -316,12 +330,12 @@ input, .search {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 40%;
+  object-position: 14% center;
 }
 .hero-veil {
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, rgba(8, 36, 30, 0.88) 0%, rgba(8, 36, 30, 0.5) 52%, rgba(8, 36, 30, 0.18) 100%);
+  background: linear-gradient(100deg, rgba(8, 36, 30, 0.72) 0%, rgba(8, 36, 30, 0.34) 52%, rgba(8, 36, 30, 0.1) 100%);
 }
 .hero-copy { position: relative; padding: 24px 26px; max-width: 760px; }
 .hero-copy .eyebrow { color: #d7f5e8; }
@@ -695,6 +709,7 @@ button.aviso:hover { transform: translateY(-1px); }
   height: 100%;
   min-height: 220px;
   object-fit: cover;
+  object-position: 12% center;
   border-radius: 16px;
 }
 .sede-side { display: grid; gap: 14px; }
@@ -898,14 +913,14 @@ th { font-size: 12px; color: var(--muted); font-weight: 700; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 62%;
+  object-position: 14% center;
   z-index: -2;
 }
 .placa-veil {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(105deg, rgba(7, 28, 24, 0.9) 0%, rgba(7, 28, 24, 0.62) 46%, rgba(7, 28, 24, 0.28) 100%);
+  background: linear-gradient(105deg, rgba(7, 28, 24, 0.72) 0%, rgba(7, 28, 24, 0.4) 46%, rgba(7, 28, 24, 0.14) 100%);
 }
 .placa-copy { max-width: 640px; padding-bottom: 2px; }
 .placa-copy .eyebrow { color: #f0e2c4; font-weight: 700; }
@@ -1059,7 +1074,7 @@ th { font-size: 12px; color: var(--muted); font-weight: 700; }
   .chat-panel[data-open="true"] {
     transition: opacity 160ms ease, visibility 0s;
   }
-  .btn:active, .chip:active, .side button:active, .robot:active, .icon-btn:active, .send:active, .tabs button:active {
+  .btn:active, .chip:active, .side button:active, .robot:active, .icon-btn:active, .send:active, .tabs button:active, .logout:active {
     transform: none;
   }
 }

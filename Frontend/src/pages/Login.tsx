@@ -6,7 +6,7 @@ export function Login({ onEnter, onBack }: { onEnter: () => void; onBack?: () =>
   return (
     <main className="login">
       <section className="login-hero">
-        <img src="/fachada-susana.png" alt="Fachada del Hospital Susana López de Valencia en la ladera, con las montañas del Cauca al fondo." />
+        <img src="/hospital-umi.jpg" alt="Edificio de UMI Pediatría del Hospital Susana López de Valencia, sede La Ladera, Popayán." />
         <div className="login-shade" />
         <div className="login-top">
           <div className="official-logo login-logo">

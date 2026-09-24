@@ -16,7 +16,7 @@ El navegador nunca se conecta a la base. Solo habla con la API.
 1. Abre la aplicación. En local es [http://localhost:5173](http://localhost:5173).
 2. La primera pantalla es la página del hospital. Pulsa **Iniciar sesión**.
 3. Entra al turno. En la demo los campos ya vienen con `carlos.torres` y `demo`. El ingreso no valida contra un directorio: al enviar el formulario se abre el tablero del jefe de turno, Dr. Carlos Torres.
-4. El menú de la izquierda cambia de módulo. El botón del robot abre **ANA IA**.
+4. El menú de la izquierda cambia de módulo. El botón del robot abre **ANA IA**. **Cerrar sesión**, junto al nombre del jefe, vuelve al ingreso y deja el chat en el saludo inicial.
 
 | Pantalla | Para qué sirve |
 |---|---|

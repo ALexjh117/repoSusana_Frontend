@@ -12,7 +12,7 @@ export function Login({ onEnter, onBack }: { onEnter: () => void; onBack?: () =>
           <div className="official-logo login-logo">
             <img src="/logo-hospital-susana-transparent.png" alt="Hospital Susana López de Valencia E.S.E." />
           </div>
-          <div className="login-top-actions">{onBack && <button className="back-home" type="button" onClick={onBack}>← Volver al inicio</button>}<span className="sede-pill">E.S.E. · Popayán</span></div>
+          <div className="login-top-actions">{onBack && <button className="btn back-home" type="button" onClick={onBack}>← Volver al inicio</button>}<span className="sede-pill">E.S.E. · Popayán</span></div>
         </div>
         <div className="login-copy">
           <p className="eyebrow">Sede La Ladera · Ciudad Blanca</p>

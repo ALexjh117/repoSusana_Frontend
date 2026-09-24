@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { ocupacion, type Pabellon } from '../api'
 import { Donut, Icon } from '../components'
 import { fechaCorta, nombre, resumenCamas, tono } from '../lib/format'
@@ -14,6 +14,14 @@ export function Camas({
   const [ojo, setOjo] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [aviso, setAviso] = useState('')
+  const [formularioAbierto, setFormularioAbierto] = useState(false)
+  const [nombreCama, setNombreCama] = useState('')
+  const [codigoCama, setCodigoCama] = useState('')
+  const [estadoCama, setEstadoCama] = useState('DISPONIBLE')
+  const [servicioCama, setServicioCama] = useState('')
+  const [pisoCama, setPisoCama] = useState('')
+  const [archivoExcel, setArchivoExcel] = useState<File | null>(null)
+  const [formularioAviso, setFormularioAviso] = useState('')
   const camas = resumenCamas(pabellones)
   const partes = [
     { value: camas.ocupadas, color: '#1a9a62', label: 'Ocupadas' },
@@ -30,6 +38,15 @@ export function Camas({
     return pabellones.flatMap((item) => item.camas).find((cama) => cama.codigo_cama.toUpperCase() === codigo) ?? null
   }, [busqueda, pabellones])
 
+  useEffect(() => {
+    if (!formularioAbierto) return
+    const cerrarConEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFormularioAbierto(false)
+    }
+    document.addEventListener('keydown', cerrarConEscape)
+    return () => document.removeEventListener('keydown', cerrarConEscape)
+  }, [formularioAbierto])
+
   return (
     <div className="page camas-page">
       <header className="camas-header">
@@ -38,8 +55,84 @@ export function Camas({
           <h1>Gestión de camas</h1>
           <p>Consulta la ocupación y disponibilidad de camas por servicio.</p>
         </div>
-        <span className="camas-header-mark" aria-hidden="true"><Icon name="camas" /></span>
+        <button
+          className="camas-header-mark"
+          type="button"
+          aria-label="Registrar camas"
+          aria-haspopup="dialog"
+          aria-expanded={formularioAbierto}
+          onClick={() => {
+            setFormularioAviso('')
+            setFormularioAbierto(true)
+          }}
+        >
+          <Icon name="camas" />
+        </button>
       </header>
+
+      {formularioAbierto && (
+        <div className="camas-modal-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setFormularioAbierto(false)
+        }}>
+          <section className="camas-modal" role="dialog" aria-modal="true" aria-labelledby="camas-modal-title">
+            <header className="camas-modal-head">
+              <div>
+                <p className="camas-section-kicker">Registro de camas</p>
+                <h2 id="camas-modal-title">Agregar datos de cama</h2>
+                <p>Completa la información o prepara un archivo de Excel para cargar varias camas.</p>
+              </div>
+              <button className="camas-modal-close" type="button" aria-label="Cerrar formulario" onClick={() => setFormularioAbierto(false)}>×</button>
+            </header>
+            <form className="camas-form" onSubmit={(event) => {
+              event.preventDefault()
+              setFormularioAviso('Los datos quedaron listos para enviar al sistema.')
+            }}>
+              <label>
+                Nombre
+                <input value={nombreCama} onChange={(event) => setNombreCama(event.target.value)} placeholder="Ej. Cama habitación 3" required />
+              </label>
+              <label>
+                Código de cama
+                <input value={codigoCama} onChange={(event) => setCodigoCama(event.target.value.toUpperCase())} placeholder="Ej. UCI-18" required />
+              </label>
+              <label>
+                Estado
+                <select value={estadoCama} onChange={(event) => setEstadoCama(event.target.value)}>
+                  <option value="DISPONIBLE">Disponible</option>
+                  <option value="OCUPADA">Ocupada</option>
+                  <option value="EN_LIMPIEZA">En limpieza</option>
+                  <option value="MANTENIMIENTO">Mantenimiento</option>
+                </select>
+              </label>
+              <label>
+                Servicio
+                <select value={servicioCama} onChange={(event) => {
+                  const servicio = pabellones.find((pabellon) => pabellon.nombre === event.target.value)
+                  setServicioCama(event.target.value)
+                  setPisoCama(servicio?.piso ?? '')
+                }} required>
+                  <option value="">Selecciona un servicio</option>
+                  {pabellones.map((pabellon) => <option key={pabellon.nombre} value={pabellon.nombre}>{nombre(pabellon.nombre)}</option>)}
+                </select>
+              </label>
+              <label>
+                Piso / pabellón
+                <input value={pisoCama} onChange={(event) => setPisoCama(event.target.value)} placeholder="Ej. Piso 2" required />
+              </label>
+              <label className="camas-file-field">
+                <span>Subir Excel de camas</span>
+                <input type="file" accept=".xls,.xlsx,.csv" onChange={(event) => setArchivoExcel(event.target.files?.[0] ?? null)} />
+                <small>{archivoExcel ? archivoExcel.name : 'Formatos permitidos: .xls, .xlsx o .csv'}</small>
+              </label>
+              <div className="camas-form-actions">
+                <button className="camas-secondary-button" type="button" onClick={() => setFormularioAbierto(false)}>Cancelar</button>
+                <button className="camas-primary-button" type="submit">Guardar cama</button>
+              </div>
+              {formularioAviso && <p className="camas-form-message" role="status">{formularioAviso}</p>}
+            </form>
+          </section>
+        </div>
+      )}
 
       <section className="camas-summary" aria-label="Resumen de camas">
         <article className="camas-summary-card is-total">

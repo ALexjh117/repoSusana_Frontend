@@ -1,0 +1,489 @@
+/* Extensiones visuales de Urgencias y Quirófanos sobre el sistema de Camas */
+.urgencias-summary .camas-summary-card > strong small {
+  color: var(--camas-muted);
+  font-size: 0.46em;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.urgencias-visual-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.urgencias-triage-panel {
+  min-height: 0;
+}
+
+.urgencias-triage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 154px;
+  align-items: center;
+  gap: 18px;
+}
+
+.urgencias-triage-list {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+
+.urgencias-triage-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  grid-template-rows: auto 5px;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 6px;
+  min-width: 0;
+}
+
+.urgencias-triage-row > i {
+  grid-row: 1 / 3;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.urgencias-triage-name {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.urgencias-triage-name strong {
+  color: var(--camas-green-deep);
+  font-size: 12px;
+  font-weight: 780;
+}
+
+.urgencias-triage-name span {
+  color: var(--camas-muted);
+  font-size: 10px;
+}
+
+.urgencias-triage-time {
+  color: var(--camas-green-deep);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.urgencias-triage-time small {
+  color: var(--camas-muted);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.urgencias-triage-bar {
+  grid-column: 2 / 4;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e8f0ec;
+}
+
+.urgencias-triage-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.urgencias-triage-panel .camas-donut-wrap {
+  width: 150px;
+  height: 150px;
+}
+
+.urgencias-triage-panel .camas-donut-center {
+  inset: 31px;
+}
+
+.urgencias-triage-panel .camas-donut-center strong {
+  font-size: 25px;
+}
+
+.urgencias-line-chart {
+  min-width: 0;
+  margin-top: 8px;
+  padding: 5px 2px 0;
+}
+
+.urgencias-line-chart .line-chart {
+  display: block;
+  width: 100%;
+  height: 158px;
+  overflow: visible;
+}
+
+.urgencias-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 7px;
+  margin-top: 2px;
+  color: var(--camas-muted);
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.urgencias-table {
+  min-width: 650px;
+}
+
+.urgencias-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--camas-green-deep);
+  font-size: 12px;
+  font-weight: 780;
+  white-space: nowrap;
+}
+
+.urgencias-level-badge i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.urgencias-table-time {
+  color: var(--camas-green-deep);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.urgencias-table-meter {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 37px;
+  align-items: center;
+  gap: 9px;
+  min-width: 160px;
+}
+
+.urgencias-table-meter .camas-table-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--camas-green);
+}
+
+.urgencias-table-meter > strong {
+  color: var(--camas-green-deep);
+  font-size: 12px;
+  text-align: right;
+}
+
+.urgencias-empty {
+  padding: 22px 0;
+  color: var(--camas-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.quirofanos-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.quirofanos-summary .is-programmed {
+  border-color: #cfe5dc;
+  background: linear-gradient(145deg, #f0f8f5 0%, #ffffff 80%);
+}
+
+.quirofanos-summary .is-programmed .camas-summary-icon {
+  background: #e0f1e8;
+  color: #2a8064;
+}
+
+.quirofanos-summary .is-programmed > strong {
+  color: #2a8064;
+}
+
+.quirofanos-table {
+  min-width: 760px;
+}
+
+.quirofanos-room-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.quirofanos-room-icon {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--camas-mint);
+  color: var(--camas-green);
+}
+
+.quirofanos-room-icon .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.quirofanos-room-name strong {
+  overflow: hidden;
+  color: var(--camas-green-deep);
+  font-size: 12px;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quirofanos-type {
+  color: var(--camas-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.quirofanos-count-cell {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+}
+
+.quirofanos-count-cell strong {
+  color: var(--camas-green-deep);
+  font-size: 14px;
+  font-weight: 820;
+}
+
+.quirofanos-count-cell span {
+  color: var(--camas-muted);
+  font-size: 10px;
+}
+
+.quirofanos-program-panel {
+  min-height: 286px;
+}
+
+.quirofanos-program-legend {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: -2px 0 8px;
+  color: var(--camas-muted);
+  font-size: 10px;
+}
+
+.quirofanos-program-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quirofanos-program-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: #b4dec7;
+}
+
+.quirofanos-program-legend i.is-realized {
+  background: var(--camas-green);
+}
+
+.quirofanos-program-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 12px;
+  min-height: 184px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid #dceae3;
+  background: repeating-linear-gradient(to top, transparent 0, transparent 43px, #edf3ef 44px);
+}
+
+.quirofanos-program-column {
+  display: grid;
+  grid-template-rows: 142px 20px 29px;
+  justify-items: center;
+  align-items: end;
+  gap: 5px;
+  min-width: 48px;
+  flex: 1;
+}
+
+.quirofanos-program-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 142px;
+}
+
+.quirofanos-program-bars > span {
+  display: block;
+  width: min(21px, 34%);
+  min-height: 0;
+  border-radius: 7px 7px 3px 3px;
+  background: #b4dec7;
+}
+
+.quirofanos-program-bars > span.is-realized {
+  background: linear-gradient(180deg, #2ca36f 0%, #137b55 100%);
+}
+
+.quirofanos-program-column > strong {
+  max-width: 78px;
+  overflow: hidden;
+  color: var(--camas-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quirofanos-program-values {
+  display: flex;
+  gap: 6px;
+  color: var(--camas-muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.quirofanos-program-values span:first-child {
+  color: #5b9b7b;
+}
+
+.quirofanos-program-values span:last-child {
+  color: var(--camas-green);
+  font-weight: 750;
+}
+
+.quirofanos-program-chart > .camas-table-empty {
+  align-self: center;
+  width: 100%;
+  padding: 30px 0 !important;
+}
+
+.camas-status-strip i.is-occupied {
+  background: var(--camas-green);
+}
+
+.camas-status-strip i.is-free {
+  background: #6abd91;
+}
+
+@media (max-width: 900px) {
+  .urgencias-visual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .urgencias-triage-layout {
+    grid-template-columns: minmax(0, 1fr) 135px;
+    gap: 10px;
+  }
+
+  .urgencias-triage-panel .camas-donut-wrap {
+    width: 132px;
+    height: 132px;
+  }
+
+  .urgencias-triage-panel .camas-donut-center {
+    inset: 27px;
+  }
+
+  .urgencias-triage-panel .camas-donut-center strong {
+    font-size: 22px;
+  }
+
+  .quirofanos-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .urgencias-triage-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .urgencias-triage-list {
+    width: 100%;
+  }
+
+  .urgencias-triage-panel .camas-donut-wrap {
+    width: 145px;
+    height: 145px;
+  }
+
+  .urgencias-triage-panel .camas-donut-center {
+    inset: 30px;
+  }
+
+  .urgencias-line-chart .line-chart {
+    height: 138px;
+  }
+
+  .quirofanos-program-panel {
+    min-height: 0;
+  }
+
+  .quirofanos-program-chart {
+    gap: 5px;
+    min-height: 170px;
+    padding-inline: 3px;
+  }
+
+  .quirofanos-program-column {
+    grid-template-rows: 128px 20px 29px;
+    min-width: 40px;
+  }
+
+  .quirofanos-program-bars {
+    height: 128px;
+  }
+
+  .quirofanos-program-bars > span {
+    width: min(16px, 38%);
+  }
+
+  .quirofanos-program-values {
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    font-size: 8px;
+  }
+}
+
+.camas-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 99px;
+  background: #e9f6ef;
+  color: #267652;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.camas-status i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #42a777;
+}
+
+.camas-status.is-busy {
+  background: #fff0d3;
+  color: #98691c;
+}
+
+.camas-status.is-busy i {
+  background: #d39b31;
+}

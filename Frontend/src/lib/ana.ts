@@ -1,5 +1,6 @@
-import type { Alerta, Medicamento, Pabellon, Quirofano, Urgencias } from './api'
-import { nombre, type AIResponse } from './bits'
+import type { Alerta, Medicamento, Pabellon, Quirofano, Urgencias } from '../api'
+import type { AIResponse } from '../components/ai/visuals'
+import { nombre } from './format'
 
 export type AnaPage = 'inicio' | 'camas' | 'urgencias' | 'quirofanos' | 'farmacia' | 'alertas' | 'diccionario' | 'reportes' | 'hospital'
 

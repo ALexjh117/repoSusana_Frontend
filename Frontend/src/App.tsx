@@ -9,12 +9,14 @@ import {
   type Quirofano,
   type Urgencias,
 } from './api'
-import { ChatPanel, Cruz, Icon, Reloj, RobotFace, type IconName, type Mensaje } from './bits'
-import { Alertas, Camas, Diccionario, Farmacia, HomePublic, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './screens'
-import { Alertas, Camas, Diccionario, Farmacia, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './screens'
-import { MODULOS, PREGUNTAS, preguntasParaModulo, visualAna } from './ana'
+import { ChatPanel, Cruz, Icon, Reloj, RobotFace, type IconName, type Mensaje } from './components'
+import { MODULOS, PREGUNTAS, preguntasParaModulo, visualAna, type AnaPage } from './lib/ana'
+import { Alertas, Camas, Diccionario, Farmacia, HomePublic, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './pages'
 
-type Page = 'inicio' | 'camas' | 'urgencias' | 'quirofanos' | 'farmacia' | 'alertas' | 'diccionario' | 'reportes' | 'hospital'
+type Page = AnaPage
+
+const SALUDO =
+  'Hola, soy ANA IA, tu asistente de inteligencia hospitalaria.\n\nPuedo ayudarte a consultar información, analizar la operación, detectar cambios, predecir escenarios y explorar posibles situaciones del hospital.\n\n¿En qué puedo ayudarte hoy?'
 
 const NAV: { id: Page; label: string; icon: IconName }[] = [
   { id: 'inicio', label: 'Inicio', icon: 'inicio' },
@@ -43,9 +45,7 @@ function App() {
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([])
   const [pulso, setPulso] = useState<Pulso | null>(null)
   const [error, setError] = useState('')
-  const [mensajes, setMensajes] = useState<Mensaje[]>([
-    { yo: false, texto: 'Hola, soy ANA IA, tu asistente de inteligencia hospitalaria.\n\nPuedo ayudarte a consultar información, analizar la operación, detectar cambios, predecir escenarios y explorar posibles situaciones del hospital.\n\n¿En qué puedo ayudarte hoy?' },
-  ])
+  const [mensajes, setMensajes] = useState<Mensaje[]>([{ yo: false, texto: SALUDO }])
   const robotRef = useRef<HTMLButtonElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const yaAbrio = useRef(false)
@@ -120,6 +120,15 @@ function App() {
     void enviar(texto)
   }
 
+  function cerrarSesion() {
+    setChatInstant(true)
+    setChatOpen(false)
+    setPensando(false)
+    setPage('inicio')
+    setMensajes([{ yo: false, texto: SALUDO }])
+    setVista('login')
+  }
+
   if (vista === 'home') return <HomePublic onLogin={() => setVista('login')} />
   if (vista === 'login') return <Login onEnter={() => setVista('app')} onBack={() => setVista('home')} />
 
@@ -148,7 +157,7 @@ function App() {
           ))}
         </nav>
         <div className="side-foot">
-          <img src="/fachada-susana.png" alt="" />
+          <img src="/hospital-umi.jpg" alt="UMI Pediatría, sede La Ladera, Popayán." />
           <div>
             <strong>Sede La Ladera</strong>
             <span>Calle 15 No. 17A-196</span>
@@ -170,6 +179,9 @@ function App() {
                 <div className="muted">Jefe de turno</div>
               </div>
             </div>
+            <button className="logout" type="button" onClick={cerrarSesion}>
+              Cerrar sesión
+            </button>
           </div>
         </header>
         <main className="content">

@@ -49,6 +49,23 @@ export type Urgencias = {
   por_triage: { nivel: number; minutos: number; pacientes: number }[]
 }
 
+export type Accion = {
+  id: string
+  tipo: string
+  rubro: string
+  destinatario: string
+  prioridad: string
+  titulo: string
+  recomendacion: string
+}
+
+export type Pulso = {
+  generado_en: string
+  riesgo: string
+  resumen: string
+  acciones: Accion[]
+}
+
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(path)
   if (!response.ok) throw new Error(path)
@@ -62,6 +79,7 @@ export const api = {
   quirofanos: () => get<Quirofano[]>("/api/quirofanos"),
   medicamentos: () => get<Medicamento[]>("/api/medicamentos"),
   urgencias: () => get<Urgencias>("/api/urgencias"),
+  acciones: () => get<Pulso>("/api/acciones"),
   marcarLimpia: async (id: number) => {
     const response = await fetch(`/api/camas/${id}`, {
       method: "PATCH",

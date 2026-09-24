@@ -134,6 +134,17 @@ h2 { font-size: 16px; letter-spacing: -0.02em; }
 .login-copy h1, .login-copy p, .login-foot { text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
 .login-top, .login-copy, .login-foot { position: relative; z-index: 1; }
 .login-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.login-top-actions { display: flex; align-items: center; gap: 8px; }
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 9px 14px;
+  color: white;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(8, 77, 53, 0.18);
+}
 .sede-pill {
   background: rgba(255, 255, 255, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.28);

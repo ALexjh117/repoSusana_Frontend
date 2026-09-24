@@ -14,8 +14,6 @@ export type IconName =
   | 'chat'
   | 'pin'
 
-export type Mensaje = { yo: boolean; texto: string }
-
 const NOMBRES: Record<string, string> = {
   UCI_ADULTOS: 'UCI adultos',
   URGENCIAS: 'Urgencias',
@@ -239,12 +237,359 @@ export function RobotFace() {
   )
 }
 
+export type AITone = 'green' | 'amber' | 'red' | 'blue' | 'neutral'
+
+export type AIStat = {
+  label: string
+  value: string
+  note?: string
+  tone?: AITone
+}
+
+export type AIProgress = {
+  label: string
+  value: string
+  detail?: string
+  percentage?: number
+  tone?: AITone
+}
+
+export type AIResponse =
+  | { tipo: 'stats'; title: string; subtitle?: string; stats: AIStat[]; footer?: string; actions?: string[] }
+  | { tipo: 'progress'; title: string; subtitle?: string; rows: AIProgress[]; footer?: string; actions?: string[] }
+  | { tipo: 'trend'; title: string; subtitle?: string; value: string; unit?: string; points: number[]; note?: string; actions?: string[] }
+  | { tipo: 'table'; title: string; subtitle?: string; columns: string[]; rows: string[][]; footer?: string; actions?: string[] }
+  | { tipo: 'alert'; title: string; text: string; tone?: AITone; footer?: string; actions?: string[] }
+  | { tipo: 'insight'; title: string; text: string; evidence?: AIStat[]; footer?: string; actions?: string[] }
+  | { tipo: 'forecast'; title: string; text: string; note?: string; actions?: string[] }
+  | { tipo: 'simulation'; title: string; scenario: string; metrics: AIStat[]; note: string; options?: string[]; actions?: string[] }
+  | { tipo: 'recommendation'; title: string; items: string[]; footer?: string; actions?: string[] }
+
+export type Mensaje = { yo: boolean; texto: string; visual?: AIResponse[] }
+
+function AIActions({ actions, onAction }: { actions?: string[]; onAction?: (texto: string) => void }) {
+  if (!actions?.length) return null
+  return (
+    <div className="ai-actions">
+      {actions.map((action) => (
+        <button key={action} type="button" onClick={() => onAction?.(action)}>
+          {action}<span aria-hidden="true">→</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function AIKPIGrid({ items }: { items: AIStat[] }) {
+  return (
+    <div className="ai-kpi-grid">
+      {items.map((item) => (
+        <div className={`ai-kpi ${item.tone ? `ai-tone-${item.tone}` : ''}`} key={item.label}>
+          <span>{item.label}</span>
+          <strong>{item.value}</strong>
+          {item.note && <small>{item.note}</small>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function AIStatCard({
+  title,
+  subtitle,
+  stats,
+  footer,
+  actions,
+  onAction,
+}: {
+  title: string
+  subtitle?: string
+  stats: AIStat[]
+  footer?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className="ai-visual-card ai-stat-card">
+      <header className="ai-card-head">
+        <div><span className="ai-card-kicker">Datos observados</span><h3>{title}</h3>{subtitle && <p>{subtitle}</p>}</div>
+        <span className="ai-card-icon"><Icon name="reportes" /></span>
+      </header>
+      <AIKPIGrid items={stats} />
+      {footer && <p className="ai-card-note">{footer}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AIProgressCard({
+  title,
+  subtitle,
+  rows,
+  footer,
+  actions,
+  onAction,
+}: {
+  title: string
+  subtitle?: string
+  rows: AIProgress[]
+  footer?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className="ai-visual-card ai-progress-card">
+      <header className="ai-card-head">
+        <div><span className="ai-card-kicker">Lectura operativa</span><h3>{title}</h3>{subtitle && <p>{subtitle}</p>}</div>
+        <span className="ai-card-icon"><Icon name="reportes" /></span>
+      </header>
+      <div className="ai-progress-list">
+        {rows.map((row) => (
+          <div className={`ai-progress-row ${row.tone ? `ai-tone-${row.tone}` : ''}`} key={row.label}>
+            <div className="ai-progress-top"><span>{row.label}</span><strong>{row.value}</strong></div>
+            {row.percentage !== undefined && <div className="ai-progress-track"><span style={{ width: `${Math.max(0, Math.min(100, row.percentage))}%` }} /></div>}
+            {row.detail && <small>{row.detail}</small>}
+          </div>
+        ))}
+      </div>
+      {footer && <p className="ai-card-note">{footer}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AITrendCard({
+  title,
+  subtitle,
+  value,
+  unit,
+  points,
+  note,
+  actions,
+  onAction,
+}: {
+  title: string
+  subtitle?: string
+  value: string
+  unit?: string
+  points: number[]
+  note?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  const width = 320
+  const height = 82
+  const min = Math.min(...points)
+  const max = Math.max(...points)
+  const range = max - min || 1
+  const coords = points.map((point, index) => {
+    const x = points.length > 1 ? (index / (points.length - 1)) * width : width / 2
+    const y = height - 12 - ((point - min) / range) * (height - 26)
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  })
+  return (
+    <article className="ai-visual-card ai-trend-card">
+      <header className="ai-card-head">
+        <div><span className="ai-card-kicker">Serie observada</span><h3>{title}</h3>{subtitle && <p>{subtitle}</p>}</div>
+        <span className="ai-card-icon"><Icon name="reportes" /></span>
+      </header>
+      <div className="ai-trend-value"><strong>{value}</strong>{unit && <span>{unit}</span>}</div>
+      <svg className="ai-sparkline" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}>
+        <path d={`M0 ${height}H${width}`} />
+        <polyline points={coords.join(' ')} />
+        {coords.map((point, index) => {
+          const [x, y] = point.split(',')
+          return <circle key={index} cx={x} cy={y} r="3.5" />
+        })}
+      </svg>
+      {note && <p className="ai-card-note">{note}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AITable({
+  title,
+  subtitle,
+  columns,
+  rows,
+  footer,
+  actions,
+  onAction,
+}: {
+  title: string
+  subtitle?: string
+  columns: string[]
+  rows: string[][]
+  footer?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className="ai-visual-card ai-table-card">
+      <header className="ai-card-head">
+        <div><span className="ai-card-kicker">Detalle disponible</span><h3>{title}</h3>{subtitle && <p>{subtitle}</p>}</div>
+        <span className="ai-card-icon"><Icon name="reportes" /></span>
+      </header>
+      <div className="ai-table-scroll">
+        <table className="ai-table">
+          <thead><tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
+          <tbody>{rows.map((row, rowIndex) => <tr key={`${rowIndex}-${row.join('-')}`}>{row.map((cell, cellIndex) => <td key={`${cellIndex}-${cell}`}>{cell}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+      {footer && <p className="ai-card-note">{footer}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AIAlertCard({
+  title,
+  text,
+  tone = 'amber',
+  footer,
+  actions,
+  onAction,
+}: {
+  title: string
+  text: string
+  tone?: AITone
+  footer?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className={`ai-visual-card ai-alert-card ai-tone-${tone}`}>
+      <header className="ai-card-head"><div><span className="ai-card-kicker">Estado recibido</span><h3>{title}</h3></div><span className="ai-card-icon"><Icon name="alertas" /></span></header>
+      <p className="ai-alert-text">{text}</p>
+      {footer && <p className="ai-card-note">{footer}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AIInsightCard({
+  title,
+  text,
+  evidence,
+  footer,
+  actions,
+  onAction,
+}: {
+  title: string
+  text: string
+  evidence?: AIStat[]
+  footer?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className="ai-visual-card ai-insight-card">
+      <header className="ai-card-head"><div><span className="ai-card-kicker">Interpretación de ANA IA</span><h3>{title}</h3></div><span className="ai-card-icon"><Icon name="reportes" /></span></header>
+      <p className="ai-insight-text">{text}</p>
+      {evidence && evidence.length > 0 && <AIKPIGrid items={evidence} />}
+      {footer && <p className="ai-card-note">{footer}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AIForecastCard({
+  title,
+  text,
+  note,
+  actions,
+  onAction,
+}: {
+  title: string
+  text: string
+  note?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className="ai-visual-card ai-forecast-card">
+      <header className="ai-card-head"><div><span className="ai-card-kicker">Proyección no disponible</span><h3>{title}</h3></div><span className="ai-card-icon"><Icon name="reportes" /></span></header>
+      <p className="ai-insight-text">{text}</p>
+      {note && <p className="ai-card-note">{note}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AISimulationCard({
+  title,
+  scenario,
+  metrics,
+  note,
+  options,
+  actions,
+  onAction,
+}: {
+  title: string
+  scenario: string
+  metrics: AIStat[]
+  note: string
+  options?: string[]
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className="ai-visual-card ai-simulation-card">
+      <header className="ai-card-head"><div><span className="ai-card-kicker">Escenario hipotético</span><h3>{title}</h3></div><span className="ai-card-icon"><Icon name="reportes" /></span></header>
+      <div className="ai-simulation-scenario"><span>Escenario</span><strong>{scenario}</strong></div>
+      <AIKPIGrid items={metrics} />
+      <p className="ai-card-note">{note}</p>
+      {options && options.length > 0 && <div className="ai-simulation-options">{options.map((option) => <button type="button" key={option} onClick={() => onAction?.(`Simular demanda ${option}`)}>{option}</button>)}</div>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AIRecommendationCard({
+  title,
+  items,
+  footer,
+  actions,
+  onAction,
+}: {
+  title: string
+  items: string[]
+  footer?: string
+  actions?: string[]
+  onAction?: (texto: string) => void
+}) {
+  return (
+    <article className="ai-visual-card ai-recommendation-card">
+      <header className="ai-card-head"><div><span className="ai-card-kicker">Apoyo operativo</span><h3>{title}</h3></div><span className="ai-card-icon"><Icon name="reportes" /></span></header>
+      <ol className="ai-recommendation-list">{items.map((item) => <li key={item}>{item}</li>)}</ol>
+      {footer && <p className="ai-card-note">{footer}</p>}
+      <AIActions actions={actions} onAction={onAction} />
+    </article>
+  )
+}
+
+export function AIResponseCard({ response, onAction }: { response: AIResponse; onAction?: (texto: string) => void }) {
+  switch (response.tipo) {
+    case 'stats': return <AIStatCard {...response} onAction={onAction} />
+    case 'progress': return <AIProgressCard {...response} onAction={onAction} />
+    case 'trend': return <AITrendCard {...response} onAction={onAction} />
+    case 'table': return <AITable {...response} onAction={onAction} />
+    case 'alert': return <AIAlertCard {...response} onAction={onAction} />
+    case 'insight': return <AIInsightCard {...response} onAction={onAction} />
+    case 'forecast': return <AIForecastCard {...response} onAction={onAction} />
+    case 'simulation': return <AISimulationCard {...response} onAction={onAction} />
+    case 'recommendation': return <AIRecommendationCard {...response} onAction={onAction} />
+  }
+}
+
 export function ChatPanel({
   abierto,
   instant,
   mensajes,
   pensando,
   preguntas,
+  contexto,
   inputRef,
   onCerrar,
   onEscape,
@@ -255,6 +600,7 @@ export function ChatPanel({
   mensajes: Mensaje[]
   pensando: boolean
   preguntas: string[]
+  contexto: string
   inputRef: RefObject<HTMLInputElement | null>
   onCerrar: () => void
   onEscape: () => void
@@ -270,46 +616,54 @@ export function ChatPanel({
 
   return (
     <section
-      id="susana-chat"
-      className="chat-panel"
+      id="ana-chat"
+      className="ana-chat-panel"
       data-open={abierto}
       data-instant={instant}
       role="dialog"
-      aria-label="SUSANA IA"
+      aria-label="ANA IA"
       inert={!abierto}
       onKeyDown={(event) => {
         if (event.key === 'Escape') onEscape()
       }}
     >
-      <header className="chat-head">
-        <Cruz className="cross sm" />
-        <div>
-          <strong>SUSANA IA</strong>
-          <span className="chat-status"><i className="online" /> En el turno</span>
+      <header className="ana-chat-head">
+        <div className="ana-chat-identity">
+          <span className="ana-chat-avatar"><RobotFace /></span>
+          <div className="ana-chat-name"><strong>ANA IA</strong><span>Tu asistente de inteligencia hospitalaria</span><span className="ana-chat-status"><i />En línea</span></div>
         </div>
-        <button className="icon-btn" type="button" onClick={onCerrar} aria-label="Cerrar chat">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 6l12 12M18 6 6 18" />
-          </svg>
-        </button>
-      </header>
-      <div className="thread" ref={lista}>
-        {mensajes.map((mensaje, index) => (
-          <p className={mensaje.yo ? 'bubble me' : 'bubble'} key={`${index}-${mensaje.texto.slice(0, 12)}`}>
-            {mensaje.texto}
-          </p>
-        ))}
-        {pensando && <p className="bubble">Estoy mirando el pulso del turno…</p>}
-      </div>
-      <div className="chips">
-        {preguntas.map((pregunta) => (
-          <button className="chip" key={pregunta} type="button" onClick={() => onEnviar(pregunta)} disabled={pensando}>
-            {pregunta}
+        <div className="ana-chat-actions">
+          <button className="ana-chat-icon-btn" type="button" onClick={onEscape} aria-label="Minimizar ANA IA">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
           </button>
+          <button className="ana-chat-icon-btn" type="button" onClick={onCerrar} aria-label="Cerrar ANA IA">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
+      </header>
+      <div className="ana-chat-context"><span>Contexto activo</span><strong>{contexto}</strong></div>
+      <div className="ana-thread" ref={lista} aria-live="polite">
+        {mensajes.map((mensaje, index) => (
+          <div className={mensaje.yo ? 'ana-message is-user' : 'ana-message is-assistant'} key={`${index}-${mensaje.texto.slice(0, 12)}`}>
+            {!mensaje.yo && <span className="ana-message-avatar"><RobotFace /></span>}
+            <div className="ana-message-content">
+              <p className={mensaje.yo ? 'ana-bubble is-user' : 'ana-bubble'}>{mensaje.texto}</p>
+              {mensaje.visual?.map((visual, visualIndex) => <AIResponseCard key={visualIndex} response={visual} onAction={onEnviar} />)}
+            </div>
+          </div>
         ))}
+        {pensando && <div className="ana-typing" role="status"><span className="ana-typing-dots"><i /><i /><i /></span><span>ANA IA está consultando el hospital…</span></div>}
+        {preguntas.length > 0 && (
+          <div className="ana-suggestions">
+            <div className="ana-suggestions-title"><span>Preguntas sugeridas</span><small>Explora el pulso del hospital</small></div>
+            <div className="ana-suggestion-list">
+              {preguntas.map((pregunta) => <button key={pregunta} type="button" onClick={() => onEnviar(pregunta)} disabled={pensando}>{pregunta}</button>)}
+            </div>
+          </div>
+        )}
       </div>
       <form
-        className="composer"
+        className="ana-composer"
         onSubmit={(event) => {
           event.preventDefault()
           const limpia = texto.trim()
@@ -318,20 +672,10 @@ export function ChatPanel({
           onEnviar(limpia)
         }}
       >
-        <input
-          ref={inputRef}
-          value={texto}
-          onChange={(event) => setTexto(event.target.value)}
-          placeholder="Escribe tu pregunta"
-          aria-label="Pregunta para SUSANA IA"
-          autoComplete="off"
-        />
-        <button className="send" type="submit" aria-label="Enviar" disabled={pensando}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </button>
+        <input ref={inputRef} value={texto} onChange={(event) => setTexto(event.target.value)} placeholder="Escribe tu pregunta..." aria-label="Pregunta para ANA IA" autoComplete="off" />
+        <button className="ana-send" type="submit" aria-label="Enviar" disabled={pensando}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
       </form>
+      <p className="ana-disclaimer">ANA IA puede cometir errores. Verifica la información importante.</p>
     </section>
   )
 }

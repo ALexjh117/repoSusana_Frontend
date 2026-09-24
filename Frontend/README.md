@@ -1,35 +1,34 @@
-# React + TypeScript + Vite
+# Frontend de ANA IA
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Pantalla del Hospital Susana López de Valencia. La guía completa —qué es la aplicación, cómo se usa y cómo levantar este frontend junto con el backend— está en el [README de la raíz](../README.md).
 
-Currently, two official plugins are available:
+## Arrancar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+La API tiene que estar en el puerto 8000. En esta carpeta:
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+copy .env.example .env
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Deja `VITE_API_URL` vacío. Vite reenvía `/api` a `http://127.0.0.1:8000`. Abre [http://localhost:5173](http://localhost:5173), entra con el formulario (en la demo ya viene `carlos.torres` / `demo`) y recorre el menú o abre ANA IA con el botón del robot.
+
+Cuando el frontend se publica, `VITE_API_URL` es la URL del backend, sin barra al final.
+
+```powershell
+npm run build
+npm run preview
+npm run lint
+```
+
+## Carpetas
+
+```
+src/pages        pantallas
+src/components   iconos, chat y tarjetas de ANA
+src/lib          ANA y cálculos compartidos
+src/styles       estilos
+src/api.ts       llamadas a la API
+src/App.tsx      página pública, ingreso y menú
+```

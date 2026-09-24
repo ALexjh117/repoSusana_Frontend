@@ -1,6 +1,9 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ocupacion, type Alerta, type Frase, type Medicamento, type Pabellon, type Quirofano, type Urgencias } from './api'
 import { Cruz, Donut, EsperaChart, fechaCorta, Icon, RobotFace, nombre, resumenCamas, saludo, tono, type IconName } from './bits'
+import { useMemo, useState } from 'react'
+import { ocupacion, type Alerta, type Frase, type Medicamento, type Pabellon, type Pulso, type Quirofano, type Urgencias } from './api'
+import { Cruz, Donut, EsperaChart, fechaCorta, Icon, nombre, resumenCamas, saludo, tono, type IconName } from './bits'
 
 const PRINCIPIOS = [
   ['Deriva', 'Abre el servicio de la pregunta'],
@@ -77,6 +80,8 @@ export function Inicio({
   onAbrirChat,
   onPreguntar,
   onVerAlertas,
+  pulso,
+  onAbrirAccion,
 }: {
   frase: Frase | null
   pabellones: Pabellon[]
@@ -88,6 +93,8 @@ export function Inicio({
   onAbrirChat: () => void
   onPreguntar: (texto: string) => void
   onVerAlertas: () => void
+  pulso: Pulso | null
+  onAbrirAccion: (destinatario: string) => void
 }) {
   const camas = resumenCamas(pabellones)
   const enCirugia = quirofanos.filter((sala) => sala.estado === 'EN_CIRUGIA').length
@@ -198,6 +205,12 @@ export function Inicio({
               <h2>Estado de los servicios</h2>
             </div>
             <span className="inicio-count-pill">{pabellones.length} servicios</span>
+      <AccionesTurno pulso={pulso} onAbrir={onAbrirAccion} />
+
+      <section className="dash-main">
+        <article className="card">
+          <header className="card-head">
+            <h2>Estado por servicio</h2>
           </header>
           <div className="inicio-service-list">
             {pabellones.map((pabellon) => {
@@ -1091,6 +1104,68 @@ const AVISOS: Record<string, { etiqueta: string; nota: string; icon: 'farmacia' 
   },
 }
 
+export function AccionesTurno({
+  pulso,
+  onAbrir,
+}: {
+  pulso: Pulso | null
+  onAbrir: (destinatario: string) => void
+}) {
+  if (!pulso || pulso.acciones.length === 0) return null
+  const alto = pulso.riesgo === 'ALTO'
+  return (
+    <section className="pulso-turno" aria-label="Acciones del turno">
+      <article className={alto ? 'card pulso-resumen alto' : 'card pulso-resumen'}>
+        <p className="eyebrow">Acciones del turno</p>
+        <h2>{riesgoLegible(pulso.riesgo)}</h2>
+        <p>{pulso.resumen}</p>
+      </article>
+      <div className="aviso-grid">
+        {pulso.acciones.map((accion) => {
+          const critica = accion.prioridad === 'critica'
+          return (
+            <button
+              className={critica ? 'aviso urgente' : 'aviso'}
+              key={accion.id}
+              type="button"
+              onClick={() => onAbrir(accion.destinatario)}
+            >
+              <span className="aviso-icon"><Icon name={iconoAccion(accion.destinatario)} /></span>
+              <div>
+                <p className="aviso-tipo">{accion.destinatario}</p>
+                <h2>{accion.titulo}</h2>
+                <p className="muted">{accion.recomendacion}</p>
+              </div>
+              <span className={critica ? 'tag hot' : 'tag warn'}>{etiquetaPrioridad(accion.prioridad)}</span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function riesgoLegible(riesgo: string) {
+  if (riesgo === 'ALTO') return 'Riesgo alto'
+  if (riesgo === 'MEDIO') return 'Riesgo medio'
+  if (riesgo === 'BAJO') return 'Riesgo bajo'
+  return `Riesgo ${riesgo.toLowerCase()}`
+}
+
+function etiquetaPrioridad(prioridad: string) {
+  if (prioridad === 'critica') return 'Crítica'
+  if (prioridad === 'alta') return 'Este turno'
+  return 'Seguimiento'
+}
+
+function iconoAccion(destinatario: string): IconName {
+  if (destinatario === 'Farmacia') return 'farmacia'
+  if (destinatario === 'Gestión de camas') return 'camas'
+  if (destinatario === 'Quirófanos') return 'quirofanos'
+  if (destinatario === 'Jefe de urgencias') return 'urgencias'
+  return 'alertas'
+}
+
 function fichaAviso(tipo: string) {
   return AVISOS[tipo] ?? {
     etiqueta: 'Turno',
@@ -1113,7 +1188,15 @@ function textoAlerta(texto: string) {
 
 type FiltroAlerta = 'todas' | 'urgentes' | 'medicamento' | 'ocupacion' | 'limpieza'
 
-export function Alertas({ alertas }: { alertas: Alerta[] }) {
+export function Alertas({
+  alertas,
+  pulso,
+  onAbrirAccion,
+}: {
+  alertas: Alerta[]
+  pulso: Pulso | null
+  onAbrirAccion: (destinatario: string) => void
+}) {
   const [filtro, setFiltro] = useState<FiltroAlerta>('todas')
   const urgentes = alertas.filter((alerta) => alerta.urgente).length
   const avisos = alertas.length - urgentes
@@ -1132,13 +1215,43 @@ export function Alertas({ alertas }: { alertas: Alerta[] }) {
   ]
 
   return (
-    <div className="page">
-      <header className="page-head">
-        <div>
+    <div className="page sala-alertas">
+      <header className="placa-susana">
+        <img src="/fachada-susana.png" alt="" />
+        <div className="placa-veil" />
+        <div className="placa-copy">
+          <p className="eyebrow">En memoria de Susana López de Valencia</p>
           <h1>Alertas del turno</h1>
-          <p className="muted">Lo que no se puede dejar pasar en La Ladera</p>
+          <p className="eslogan">Aquí no se le cierra la puerta a nadie.</p>
+          <p>Lo que se dice en La Ladera</p>
         </div>
+        <aside className="placa-homenaje">
+          <Cruz className="cross sm" />
+          <p>1910 — 1964</p>
+          <strong>Su nombre sigue en este turno</strong>
+          <span>Primera dama de Colombia. El hospital de La Ladera la recuerda desde 1964.</span>
+        </aside>
       </header>
+      <ul className="hitos-susana" aria-label="Memoria de Susana López de Valencia">
+        <li>
+          <strong>Palmira</strong>
+          <span>Nació el 17 de septiembre de 1910</span>
+        </li>
+        <li>
+          <strong>1962 — 1964</strong>
+          <span>Primera dama, junto a Guillermo León Valencia</span>
+        </li>
+        <li>
+          <strong>Popayán</strong>
+          <span>La Ciudad Blanca guarda su memoria</span>
+        </li>
+        <li>
+          <strong>La Ladera</strong>
+          <span>El hospital lleva su nombre desde 1964</span>
+        </li>
+      </ul>
+      <AccionesTurno pulso={pulso} onAbrir={onAbrirAccion} />
+      <h2 className="subhead">Avisos que ya estaban en el tablero</h2>
       <section className="mini-kpis">
         <article className={`card kpi${urgentes ? ' alert' : ''}`}>
           <div className="kpi-top">
@@ -1165,7 +1278,7 @@ export function Alertas({ alertas }: { alertas: Alerta[] }) {
           <em>Farmacia, camas y aseo</em>
         </article>
       </section>
-      <div className="tabs" aria-label="Filtrar alertas">
+      <div className="tabs filtros-sala" aria-label="Filtrar alertas">
         {filtros.map((item) => (
           <button
             key={item.id}
@@ -1179,7 +1292,7 @@ export function Alertas({ alertas }: { alertas: Alerta[] }) {
         ))}
       </div>
       {visibles.length > 0 && (
-        <section className="aviso-grid">
+        <section className="aviso-grid tablero-sala">
           {visibles.map((alerta) => {
             const ficha = fichaAviso(alerta.tipo)
             return (
@@ -1197,8 +1310,12 @@ export function Alertas({ alertas }: { alertas: Alerta[] }) {
         </section>
       )}
       {visibles.length === 0 && (
-        <article className="card">
-          <p className="muted">{alertas.length === 0 ? 'Sin alertas en este turno.' : 'Nada coincide con este filtro.'}</p>
+        <article className="card vacio-sala">
+          <Cruz className="cross sm" />
+          <div>
+            <strong>{alertas.length === 0 ? 'El turno está en calma' : 'Nada en este filtro'}</strong>
+            <p className="muted">{alertas.length === 0 ? 'Sin alertas en este turno.' : 'Nada coincide con este filtro.'}</p>
+          </div>
         </article>
       )}
     </div>

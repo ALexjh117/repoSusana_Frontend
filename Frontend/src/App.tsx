@@ -5,6 +5,7 @@ import {
   type Frase,
   type Medicamento,
   type Pabellon,
+  type Pulso,
   type Quirofano,
   type Urgencias,
 } from './api'
@@ -38,6 +39,7 @@ function App() {
   const [quirofanos, setQuirofanos] = useState<Quirofano[]>([])
   const [urgencias, setUrgencias] = useState<Urgencias | null>(null)
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([])
+  const [pulso, setPulso] = useState<Pulso | null>(null)
   const [error, setError] = useState('')
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     { yo: false, texto: 'Hola, soy ANA IA, tu asistente de inteligencia hospitalaria.\n\nPuedo ayudarte a consultar información, analizar la operación, detectar cambios, predecir escenarios y explorar posibles situaciones del hospital.\n\n¿En qué puedo ayudarte hoy?' },
@@ -74,6 +76,12 @@ function App() {
       setError('')
     } catch {
       setError('El frontend no alcanzó el API. Arranca el backend en el puerto 8000.')
+      return
+    }
+    try {
+      setPulso(await api.acciones())
+    } catch {
+      setPulso(null)
     }
   }
 
@@ -175,6 +183,8 @@ function App() {
               onAbrirChat={abrirChat}
               onPreguntar={preguntarDesde}
               onVerAlertas={() => setPage('alertas')}
+              pulso={pulso}
+              onAbrirAccion={(destinatario) => setPage(paginaDe(destinatario))}
             />
           )}
           {page === 'camas' && (
@@ -189,7 +199,13 @@ function App() {
           {page === 'urgencias' && <VistaUrgencias urgencias={urgencias} />}
           {page === 'quirofanos' && <Quirofanos quirofanos={quirofanos} />}
           {page === 'farmacia' && <Farmacia medicamentos={medicamentos} />}
-          {page === 'alertas' && <Alertas alertas={alertas} />}
+          {page === 'alertas' && (
+            <Alertas
+              alertas={alertas}
+              pulso={pulso}
+              onAbrirAccion={(destinatario) => setPage(paginaDe(destinatario))}
+            />
+          )}
           {page === 'reportes' && (
             <Reportes
               pabellones={pabellones}
@@ -235,6 +251,14 @@ function App() {
       )}
     </div>
   )
+}
+
+function paginaDe(destinatario: string): Page {
+  if (destinatario === 'Farmacia') return 'farmacia'
+  if (destinatario === 'Gestión de camas') return 'camas'
+  if (destinatario === 'Quirófanos') return 'quirofanos'
+  if (destinatario === 'Jefe de urgencias') return 'urgencias'
+  return 'alertas'
 }
 
 export default App

@@ -503,11 +503,63 @@ export function Quirofanos({ quirofanos }: { quirofanos: Quirofano[] }) {
   )
 }
 
+const FAMILIAS: Record<string, { nombre: string; color: string }> = {
+  'Fentanilo 0.5mg/10ml': { nombre: 'Opioides', color: '#e25b4a' },
+  'Norepinefrina 4mg/4ml': { nombre: 'Vasoactivos', color: '#e07a3a' },
+  'Amoxicilina 500mg': { nombre: 'Antibióticos', color: '#3d8fd1' },
+  'Acetaminofen 1g': { nombre: 'Analgésicos', color: '#1a9a62' },
+}
+
+function familiaDe(nombreMed: string) {
+  return FAMILIAS[nombreMed] ?? { nombre: 'Otras', color: '#8aa099' }
+}
+
+function cantidad(valor: number) {
+  return valor.toLocaleString('es-CO', { maximumFractionDigits: 1 })
+}
+
+function diasTexto(dias: number) {
+  const texto = Number.isInteger(dias) ? String(dias) : cantidad(dias)
+  return `${texto} ${dias === 1 ? 'día' : 'días'}`
+}
+
+function FilaMedicamento({ med }: { med: Medicamento }) {
+  const corto = med.dias < 5
+  const critico = Boolean(med.es_critico)
+  const ancho = Math.max(8, Math.min(100, (med.dias / 14) * 100))
+  return (
+    <div className="med-row">
+      <div>
+        <strong>{med.nombre_generico}</strong>
+        <div className="muted">Stock {med.stock_actual} · consumo {cantidad(med.consumo_diario_promedio)} al día</div>
+      </div>
+      <div className="med-side">
+        <span className={corto ? (critico ? 'tag hot' : 'tag warn') : 'tag'}>
+          {corto ? (critico ? 'Crítico' : 'Corto') : 'Estable'}
+        </span>
+        <em>{diasTexto(med.dias)}</em>
+      </div>
+      <div className="track meter" aria-hidden="true">
+        <div className={`fill ${corto ? 'hot' : 'ok'}`} style={{ width: `${ancho}%` }} />
+      </div>
+    </div>
+  )
+}
+
 export function Farmacia({ medicamentos }: { medicamentos: Medicamento[] }) {
-  const criticos = medicamentos.filter((med) => med.dias < 5)
+  const cortos = medicamentos.filter((med) => med.dias < 5)
   const estables = medicamentos.filter((med) => med.dias >= 5)
-  const stockCritico = criticos.reduce((sum, med) => sum + med.stock_actual, 0)
-  const stockEstable = estables.reduce((sum, med) => sum + med.stock_actual, 0)
+  const marcados = medicamentos.filter((med) => med.es_critico).length
+  const familias = new Map<string, { color: string; consumo: number }>()
+  for (const med of medicamentos) {
+    const familia = familiaDe(med.nombre_generico)
+    const actual = familias.get(familia.nombre) ?? { color: familia.color, consumo: 0 }
+    actual.consumo += med.consumo_diario_promedio
+    familias.set(familia.nombre, actual)
+  }
+  const consumoTotal = medicamentos.reduce((sum, med) => sum + med.consumo_diario_promedio, 0)
+  const partes = [...familias.entries()].map(([, familia]) => ({ value: familia.consumo, color: familia.color }))
+
   return (
     <div className="page">
       <header className="page-head">
@@ -517,60 +569,221 @@ export function Farmacia({ medicamentos }: { medicamentos: Medicamento[] }) {
         </div>
       </header>
       <section className="mini-kpis">
-        <article className="card kpi"><span>Referencias</span><strong>{medicamentos.length}</strong></article>
-        <article className="card kpi"><span>Con menos de 5 días</span><strong>{criticos.length}</strong></article>
-        <article className="card kpi"><span>Stock en críticos</span><strong>{stockCritico}</strong></article>
+        <article className="card kpi">
+          <div className="kpi-top">
+            <span>Referencias</span>
+            <span className="kpi-icon"><Icon name="farmacia" /></span>
+          </div>
+          <strong>{medicamentos.length}</strong>
+          <em>En el inventario del turno</em>
+        </article>
+        <article className={`card kpi${cortos.length ? ' alert' : ''}`}>
+          <div className="kpi-top">
+            <span>Menos de 5 días</span>
+            <span className="kpi-icon"><Icon name="alertas" /></span>
+          </div>
+          <strong>{cortos.length}</strong>
+          <em>Cobertura que enciende alerta</em>
+        </article>
+        <article className={`card kpi${marcados ? ' warn' : ''}`}>
+          <div className="kpi-top">
+            <span>Fármacos críticos</span>
+            <span className="kpi-icon"><Icon name="farmacia" /></span>
+          </div>
+          <strong>{marcados}</strong>
+          <em>Marcados en el backend</em>
+        </article>
       </section>
-      <section className="split">
+      <section className="split lista">
         <article className="card">
-          <header className="card-head"><h2>Cobertura corta</h2></header>
-          {medicamentos.map((med) => (
-            <div className="med" key={med.nombre_generico}>
-              <div>
-                <strong>{med.nombre_generico}</strong>
-                <div className="muted">Stock {med.stock_actual} · {med.dias} días</div>
-              </div>
-              {med.dias < 5 ? <span className="tag warn">Crítico</span> : <span className="tag">Estable</span>}
-            </div>
-          ))}
+          <header className="card-head">
+            <h2>Medicamentos con menos de 5 días</h2>
+            {cortos.length > 0 && <span className="tag hot">{cortos.length}</span>}
+          </header>
           {medicamentos.length === 0 && <p className="muted">Sin inventario cargado.</p>}
+          {cortos.map((med) => <FilaMedicamento key={med.nombre_generico} med={med} />)}
+          {medicamentos.length > 0 && cortos.length === 0 && <p className="muted">Ningún medicamento está por debajo de 5 días.</p>}
+          {estables.length > 0 && (
+            <>
+              <h3 className="subhead">Cobertura estable</h3>
+              {estables.map((med) => <FilaMedicamento key={med.nombre_generico} med={med} />)}
+            </>
+          )}
         </article>
         <article className="card ocupacion-card">
-          <header className="card-head"><h2>Stock según cobertura</h2></header>
-          <div className="donut-wrap">
-            <Donut parts={[{ value: stockCritico, color: '#e25b4a' }, { value: stockEstable, color: '#1a9a62' }]} />
-            <div className="donut-label">
-              <strong>{stockCritico + stockEstable}</strong>
-              <span>unidades</span>
-            </div>
-          </div>
-          <ul className="legend">
-            <li><i style={{ background: '#e25b4a' }} />Menos de 5 días · {stockCritico}</li>
-            <li><i style={{ background: '#1a9a62' }} />Cobertura estable · {stockEstable}</li>
-          </ul>
+          <header className="card-head"><h2>Consumo por familia</h2></header>
+          {medicamentos.length === 0 ? (
+            <p className="muted">Sin inventario cargado.</p>
+          ) : (
+            <>
+              <div className="donut-wrap">
+                <Donut parts={partes} />
+                <div className="donut-label">
+                  <strong>{cantidad(consumoTotal)}</strong>
+                  <span>al día</span>
+                </div>
+              </div>
+              <ul className="legend">
+                {[...familias.entries()].map(([nombreFamilia, familia]) => (
+                  <li key={nombreFamilia}>
+                    <i style={{ background: familia.color }} />
+                    {nombreFamilia} · {cantidad(familia.consumo)} / día
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </article>
       </section>
     </div>
   )
 }
 
+const AVISOS: Record<string, { etiqueta: string; nota: string; icon: 'farmacia' | 'camas' | 'alertas' }> = {
+  medicamento: {
+    etiqueta: 'Farmacia',
+    nota: 'El stock no alcanza cinco días al ritmo de consumo de hoy.',
+    icon: 'farmacia',
+  },
+  ocupacion: {
+    etiqueta: 'Camas',
+    nota: 'El servicio está en o por encima del 80% de ocupación.',
+    icon: 'camas',
+  },
+  limpieza: {
+    etiqueta: 'Aseo',
+    nota: 'La cama vuelve a recepción cuando aseo marca que ya está limpia.',
+    icon: 'camas',
+  },
+}
+
+function fichaAviso(tipo: string) {
+  return AVISOS[tipo] ?? {
+    etiqueta: 'Turno',
+    nota: 'Revisa el dato antes de cerrar el turno.',
+    icon: 'alertas' as const,
+  }
+}
+
+function textoAlerta(texto: string) {
+  const nombres: [string, string][] = [
+    ['UCI ADULTOS', 'UCI adultos'],
+    ['MEDICINA INTERNA', 'Medicina interna'],
+    ['PEDIATRIA', 'Pediatría'],
+    ['CIRUGIA', 'Cirugía'],
+    ['URGENCIAS', 'Urgencias'],
+  ]
+  const legible = nombres.reduce((actual, [crudo, lindo]) => actual.replaceAll(crudo, lindo), texto)
+  return legible.replace(/(\d+)\.0(?!\d)/g, '$1')
+}
+
+type FiltroAlerta = 'todas' | 'urgentes' | 'medicamento' | 'ocupacion' | 'limpieza'
+
 export function Alertas({ alertas }: { alertas: Alerta[] }) {
+  const [filtro, setFiltro] = useState<FiltroAlerta>('todas')
+  const urgentes = alertas.filter((alerta) => alerta.urgente).length
+  const avisos = alertas.length - urgentes
+  const ordenadas = [...alertas].sort((a, b) => Number(b.urgente) - Number(a.urgente))
+  const visibles = ordenadas.filter((alerta) => {
+    if (filtro === 'urgentes') return alerta.urgente
+    if (filtro === 'todas') return true
+    return alerta.tipo === filtro
+  })
+  const filtros: { id: FiltroAlerta; label: string }[] = [
+    { id: 'todas', label: 'Todas' },
+    { id: 'urgentes', label: 'Urgentes' },
+    { id: 'medicamento', label: 'Farmacia' },
+    { id: 'ocupacion', label: 'Camas' },
+    { id: 'limpieza', label: 'Aseo' },
+  ]
+
   return (
     <div className="page">
       <header className="page-head">
         <div>
-          <h1>Alertas</h1>
-          <p className="muted">Lo que el turno no puede dejar pasar</p>
+          <h1>Alertas del turno</h1>
+          <p className="muted">Lo que no se puede dejar pasar en La Ladera</p>
         </div>
       </header>
-      <section className="card">
-        {alertas.map((alerta) => (
-          <div className={alerta.urgente ? 'alerta urgente' : 'alerta'} key={`${alerta.tipo}-${alerta.texto}`}>
-            <p>{alerta.texto}</p>
+      <section className="mini-kpis">
+        <article className={`card kpi${urgentes ? ' alert' : ''}`}>
+          <div className="kpi-top">
+            <span>Urgentes</span>
+            <span className="kpi-icon"><Icon name="alertas" /></span>
           </div>
-        ))}
-        {alertas.length === 0 && <p className="muted">Sin alertas en este turno.</p>}
+          <strong>{urgentes}</strong>
+          <em>Piden mirada ahora</em>
+        </article>
+        <article className={`card kpi${avisos ? ' warn' : ''}`}>
+          <div className="kpi-top">
+            <span>Avisos</span>
+            <span className="kpi-icon"><Icon name="alertas" /></span>
+          </div>
+          <strong>{avisos}</strong>
+          <em>Siguen el turno de cerca</em>
+        </article>
+        <article className="card kpi">
+          <div className="kpi-top">
+            <span>En el tablero</span>
+            <span className="kpi-icon"><Icon name="inicio" /></span>
+          </div>
+          <strong>{alertas.length}</strong>
+          <em>Farmacia, camas y aseo</em>
+        </article>
       </section>
+      <div className="tabs" aria-label="Filtrar alertas">
+        {filtros.map((item) => (
+          <button
+            key={item.id}
+            className={filtro === item.id ? 'active' : ''}
+            type="button"
+            aria-pressed={filtro === item.id}
+            onClick={() => setFiltro(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {visibles.length > 0 && (
+        <section className="aviso-grid">
+          {visibles.map((alerta) => {
+            const ficha = fichaAviso(alerta.tipo)
+            return (
+              <article className={alerta.urgente ? 'aviso urgente' : 'aviso'} key={`${alerta.tipo}-${alerta.texto}`}>
+                <span className="aviso-icon"><Icon name={ficha.icon} /></span>
+                <div>
+                  <p className="aviso-tipo">{ficha.etiqueta}</p>
+                  <h2>{textoAlerta(alerta.texto)}</h2>
+                  <p className="muted">{ficha.nota}</p>
+                </div>
+                <span className={alerta.urgente ? 'tag hot' : 'tag warn'}>{alerta.urgente ? 'Urgente' : 'Aviso'}</span>
+              </article>
+            )
+          })}
+        </section>
+      )}
+      {visibles.length === 0 && (
+        <article className="card">
+          <p className="muted">{alertas.length === 0 ? 'Sin alertas en este turno.' : 'Nada coincide con este filtro.'}</p>
+        </article>
+      )}
+    </div>
+  )
+}
+
+function fraseCodigo(codigo: string) {
+  const limpio = codigo.toLowerCase().replaceAll('_', ' ').replace('cirugia', 'cirugía')
+  return limpio.charAt(0).toUpperCase() + limpio.slice(1)
+}
+
+function BarraPct({ valor, max = 100 }: { valor: number; max?: number }) {
+  const ancho = Math.max(0, Math.min(100, max ? (valor / max) * 100 : 0))
+  return (
+    <div className="pct-cell">
+      <div className="track" aria-hidden="true">
+        <div className={`fill ${tono(max === 100 ? valor : ancho)}`} style={{ width: `${ancho}%` }} />
+      </div>
+      <strong>{max === 100 ? `${valor}%` : valor}</strong>
     </div>
   )
 }
@@ -579,74 +792,205 @@ export function Reportes({
   pabellones,
   urgencias,
   medicamentos,
+  quirofanos,
 }: {
   pabellones: Pabellon[]
   urgencias: Urgencias | null
   medicamentos: Medicamento[]
+  quirofanos: Quirofano[]
 }) {
-  const [tab, setTab] = useState<'ocupacion' | 'urgencias' | 'farmacia'>('ocupacion')
+  const [tab, setTab] = useState<'ocupacion' | 'urgencias' | 'farmacia' | 'quirofanos'>('ocupacion')
+  const camas = resumenCamas(pabellones)
+  const pico = [...pabellones].sort((a, b) => ocupacion(b) - ocupacion(a))[0]
+  const pacientes = urgencias?.por_triage.reduce((sum, fila) => sum + fila.pacientes, 0) ?? 0
+  const esperaMax = urgencias ? Math.max(...urgencias.por_triage.map((fila) => fila.minutos), 1) : 1
+  const cortos = medicamentos.filter((med) => med.dias < 5).length
+  const enCirugia = quirofanos.filter((sala) => sala.estado === 'EN_CIRUGIA').length
+  const programadas = quirofanos.reduce((sum, sala) => sum + sala.programadas, 0)
+  const realizadas = quirofanos.reduce((sum, sala) => sum + sala.realizadas, 0)
+
   return (
     <div className="page">
       <header className="page-head">
         <div>
           <h1>Reportes y análisis</h1>
-          <p className="muted">Sede La Ladera · {fechaCorta()}</p>
+          <p className="muted">Turno de hoy · Sede La Ladera · {fechaCorta()}</p>
         </div>
-        <div className="tabs" role="tablist">
-          <button className={tab === 'ocupacion' ? 'active' : ''} type="button" onClick={() => setTab('ocupacion')}>Ocupación</button>
-          <button className={tab === 'urgencias' ? 'active' : ''} type="button" onClick={() => setTab('urgencias')}>Urgencias</button>
-          <button className={tab === 'farmacia' ? 'active' : ''} type="button" onClick={() => setTab('farmacia')}>Farmacia</button>
+        <div className="tabs" role="tablist" aria-label="Tipo de reporte">
+          <button className={tab === 'ocupacion' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'ocupacion'} onClick={() => setTab('ocupacion')}>Ocupación</button>
+          <button className={tab === 'urgencias' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'urgencias'} onClick={() => setTab('urgencias')}>Urgencias</button>
+          <button className={tab === 'quirofanos' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'quirofanos'} onClick={() => setTab('quirofanos')}>Quirófanos</button>
+          <button className={tab === 'farmacia' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'farmacia'} onClick={() => setTab('farmacia')}>Farmacia</button>
         </div>
       </header>
+
+      {tab === 'ocupacion' && (
+        <section className="mini-kpis">
+          <article className="card kpi">
+            <span>Ocupación</span>
+            <strong>{camas.total ? `${camas.pct}%` : '—'}</strong>
+            <em>{camas.ocupadas} de {camas.total} camas</em>
+          </article>
+          <article className="card kpi">
+            <span>En aseo</span>
+            <strong>{camas.limpieza}</strong>
+            <em>Esperan el clic de limpieza</em>
+          </article>
+          <article className="card kpi">
+            <span>Servicio más lleno</span>
+            <strong className="texto">{pico ? nombre(pico.nombre) : '—'}</strong>
+            <em>{pico ? `${ocupacion(pico)}% de ocupación` : 'Sin pabellones'}</em>
+          </article>
+        </section>
+      )}
+      {tab === 'urgencias' && (
+        <section className="mini-kpis">
+          <article className="card kpi">
+            <span>Espera puerta-médico</span>
+            <strong>{urgencias ? `${urgencias.espera_promedio} min` : '—'}</strong>
+            <em>Promedio de la muestra</em>
+          </article>
+          <article className="card kpi">
+            <span>Pacientes</span>
+            <strong>{urgencias ? pacientes : '—'}</strong>
+            <em>En los niveles de triage</em>
+          </article>
+          <article className="card kpi">
+            <span>Niveles</span>
+            <strong>{urgencias ? urgencias.por_triage.length : '—'}</strong>
+            <em>Con tiempo publicado</em>
+          </article>
+        </section>
+      )}
+      {tab === 'quirofanos' && (
+        <section className="mini-kpis">
+          <article className="card kpi">
+            <span>En cirugía</span>
+            <strong>{quirofanos.length ? `${enCirugia} / ${quirofanos.length}` : '—'}</strong>
+            <em>Salas del turno</em>
+          </article>
+          <article className="card kpi">
+            <span>Programadas</span>
+            <strong>{programadas}</strong>
+            <em>En la agenda</em>
+          </article>
+          <article className="card kpi">
+            <span>Realizadas</span>
+            <strong>{realizadas}</strong>
+            <em>Ya salieron de sala</em>
+          </article>
+        </section>
+      )}
+      {tab === 'farmacia' && (
+        <section className="mini-kpis">
+          <article className="card kpi">
+            <span>Referencias</span>
+            <strong>{medicamentos.length}</strong>
+            <em>En el inventario</em>
+          </article>
+          <article className={`card kpi${cortos ? ' alert' : ''}`}>
+            <span>Menos de 5 días</span>
+            <strong>{cortos}</strong>
+            <em>Entran a la alerta</em>
+          </article>
+          <article className="card kpi">
+            <span>Consumo diario</span>
+            <strong>{cantidad(medicamentos.reduce((sum, med) => sum + med.consumo_diario_promedio, 0))}</strong>
+            <em>Unidades al día</em>
+          </article>
+        </section>
+      )}
+
       <section className="card">
         {tab === 'ocupacion' && (
-          <table>
+          <table className="tabla">
             <thead>
-              <tr><th>Servicio</th><th>Ocupadas</th><th>Limpieza</th><th>Libres</th><th>%</th></tr>
+              <tr><th>Servicio</th><th>Piso</th><th>Ocupadas</th><th>Limpieza</th><th>Libres</th><th>Ocupación</th></tr>
             </thead>
             <tbody>
               {pabellones.map((pabellon) => (
                 <tr key={pabellon.nombre}>
                   <td>{nombre(pabellon.nombre)}</td>
+                  <td>{pabellon.piso}</td>
                   <td>{pabellon.ocupadas}</td>
                   <td>{pabellon.limpieza}</td>
                   <td>{pabellon.libres}</td>
-                  <td>{ocupacion(pabellon)}%</td>
+                  <td><BarraPct valor={ocupacion(pabellon)} /></td>
                 </tr>
               ))}
+              {pabellones.length === 0 && (
+                <tr><td colSpan={6}>Todavía no llegan los pabellones.</td></tr>
+              )}
             </tbody>
           </table>
         )}
+        {tab === 'urgencias' && !urgencias && <p className="muted">Sin datos de urgencias.</p>}
         {tab === 'urgencias' && urgencias && (
-          <table>
+          <table className="tabla">
             <thead>
-              <tr><th>Triage</th><th>Minutos</th><th>Pacientes</th></tr>
+              <tr><th>Triage</th><th>Espera</th><th>Pacientes</th></tr>
             </thead>
             <tbody>
               {urgencias.por_triage.map((fila) => (
                 <tr key={fila.nivel}>
-                  <td>Triage {fila.nivel}</td>
-                  <td>{fila.minutos}</td>
+                  <td>
+                    <span className="triage-dot" style={{ background: TRIAGE[fila.nivel - 1] }} />
+                    Triage {fila.nivel}
+                  </td>
+                  <td><BarraPct valor={fila.minutos} max={esperaMax} /></td>
                   <td>{fila.pacientes}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-        {tab === 'farmacia' && (
-          <table>
+        {tab === 'quirofanos' && (
+          <table className="tabla">
             <thead>
-              <tr><th>Medicamento</th><th>Stock</th><th>Días</th><th>Estado</th></tr>
+              <tr><th>Sala</th><th>Tipo</th><th>Programadas</th><th>Realizadas</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+              {quirofanos.map((sala) => (
+                <tr key={sala.id_quirofano}>
+                  <td>{sala.nombre_sala}</td>
+                  <td>{fraseCodigo(sala.tipo_quirofano)}</td>
+                  <td>{sala.programadas}</td>
+                  <td>{sala.realizadas}</td>
+                  <td>
+                    <span className={sala.estado === 'EN_CIRUGIA' ? 'tag busy' : 'tag'}>
+                      {sala.estado === 'EN_CIRUGIA' ? 'En cirugía' : 'Disponible'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {quirofanos.length === 0 && (
+                <tr><td colSpan={5}>Sin salas cargadas.</td></tr>
+              )}
+            </tbody>
+          </table>
+        )}
+        {tab === 'farmacia' && (
+          <table className="tabla">
+            <thead>
+              <tr><th>Medicamento</th><th>Stock</th><th>Consumo / día</th><th>Cobertura</th><th>Estado</th></tr>
             </thead>
             <tbody>
               {medicamentos.map((med) => (
                 <tr key={med.nombre_generico}>
                   <td>{med.nombre_generico}</td>
                   <td>{med.stock_actual}</td>
-                  <td>{med.dias}</td>
-                  <td>{med.dias < 5 ? 'Menos de 5 días' : 'Estable'}</td>
+                  <td>{cantidad(med.consumo_diario_promedio)}</td>
+                  <td>{diasTexto(med.dias)}</td>
+                  <td>
+                    <span className={med.dias < 5 ? (med.es_critico ? 'tag hot' : 'tag warn') : 'tag'}>
+                      {med.dias < 5 ? (med.es_critico ? 'Crítico' : 'Corto') : 'Estable'}
+                    </span>
+                  </td>
                 </tr>
               ))}
+              {medicamentos.length === 0 && (
+                <tr><td colSpan={5}>Sin inventario cargado.</td></tr>
+              )}
             </tbody>
           </table>
         )}
@@ -655,30 +999,137 @@ export function Reportes({
   )
 }
 
+const TABLAS: {
+  id: string
+  nombre: string
+  vista: string
+  para: string
+  campos: { nombre: string; detalle: string }[]
+}[] = [
+  {
+    id: 'servicios',
+    nombre: 'Servicios',
+    vista: 'Camas y ocupación',
+    para: 'Los pabellones de La Ladera. De aquí salen el nombre, el piso y el cupo con el que se calcula el porcentaje.',
+    campos: [
+      { nombre: 'nombre_servicio', detalle: 'Código del pabellón. En pantalla se lee UCI adultos, Urgencias, Medicina interna, Pediatría o Cirugía.' },
+      { nombre: 'piso_pabellon', detalle: 'Piso de la sede. Aparece junto al servicio en Camas y en el reporte de ocupación.' },
+      { nombre: 'capacidad_total_camas', detalle: 'Cupo del servicio. La ocupación compara las camas ocupadas contra este total.' },
+    ],
+  },
+  {
+    id: 'camas',
+    nombre: 'Camas',
+    vista: 'Camas, aseo y alertas',
+    para: 'Cada cama con su código y su estado. El clic de aseo solo cambia una cama que está en limpieza.',
+    campos: [
+      { nombre: 'codigo_cama', detalle: 'El código que se busca, por ejemplo UCI-18 o URG-02.' },
+      { nombre: 'estado_cama', detalle: 'OCUPADA, DISPONIBLE, EN_LIMPIEZA o MANTENIMIENTO. Aseo solo pasa de EN_LIMPIEZA a DISPONIBLE.' },
+      { nombre: 'id_servicio', detalle: 'El pabellón al que pertenece. Así se arma el grupo de cada piso.' },
+    ],
+  },
+  {
+    id: 'medicamentos',
+    nombre: 'Medicamentos',
+    vista: 'Farmacia y alertas',
+    para: 'Inventario del turno. Los días de cobertura son el stock dividido por el consumo diario. Menos de 5 días enciende la alerta.',
+    campos: [
+      { nombre: 'nombre_generico', detalle: 'Cómo se lista el fármaco en Farmacia y en la alerta.' },
+      { nombre: 'stock_actual', detalle: 'Unidades que hay ahora.' },
+      { nombre: 'consumo_diario_promedio', detalle: 'Lo que se gasta en un día. Sirve para los días de cobertura y para el consumo por familia.' },
+      { nombre: 'es_critico', detalle: '1 si el fármaco no puede faltar. Esa marca vuelve la alerta urgente.' },
+    ],
+  },
+  {
+    id: 'episodios_admision',
+    nombre: 'Admisiones',
+    vista: 'Urgencias',
+    para: 'La muestra del turno: cuándo entró la persona y cuándo la vio el médico. La espera puerta-médico es esa diferencia.',
+    campos: [
+      { nombre: 'id_servicio_ingreso', detalle: 'Servicio por el que entró. En la muestra, urgencias.' },
+      { nombre: 'fecha_hora_ingreso', detalle: 'Hora de llegada a la puerta.' },
+      { nombre: 'fecha_hora_atencion_medica', detalle: 'Hora de la atención. Con el ingreso arma los minutos de espera.' },
+    ],
+  },
+  {
+    id: 'triages',
+    nombre: 'Triage',
+    vista: 'Frase del turno',
+    para: 'El nivel y la nota que ya escribió el médico. La frase grande del inicio sale de esa nota, no de un texto inventado.',
+    campos: [
+      { nombre: 'nivel_triage', detalle: 'Del 1 al 5. Colorea la espera y la distribución de Urgencias.' },
+      { nombre: 'nota_triage', detalle: 'El texto del médico. SUSANA lo pone donde el jefe de turno lo ve.' },
+      { nombre: 'id_admision', detalle: 'Une la nota con el episodio de ingreso.' },
+    ],
+  },
+  {
+    id: 'quirofanos',
+    nombre: 'Quirófanos',
+    vista: 'Quirófanos',
+    para: 'Cada sala con lo programado, lo realizado y si está en cirugía.',
+    campos: [
+      { nombre: 'nombre_sala', detalle: 'Nombre que se ve en la lista, por ejemplo Quirófano 2 - Laparoscopia.' },
+      { nombre: 'tipo_quirofano', detalle: 'Cirugía mayor o urgencias.' },
+      { nombre: 'estado', detalle: 'EN_CIRUGIA o DISPONIBLE.' },
+      { nombre: 'programadas', detalle: 'Cirugías de la agenda.' },
+      { nombre: 'realizadas', detalle: 'Cirugías que ya salieron de sala.' },
+    ],
+  },
+]
+
 export function Diccionario() {
-  const filas = [
-    ['Camas', 'Ocupada, en limpieza o disponible. El clic de aseo solo pasa una cama de limpieza a disponible.'],
-    ['Servicios', 'UCI adultos, urgencias, medicina interna, pediatría y cirugía, con el piso de la sede.'],
-    ['Urgencias', 'Espera puerta-médico y minutos por nivel de triage, tomados de la muestra del turno.'],
-    ['Quirófanos', 'Salas con lo programado, lo realizado y si están en cirugía.'],
-    ['Farmacia', 'Stock, consumo diario y días de cobertura. Menos de 5 días enciende la alerta.'],
-    ['Frase del turno', 'La nota que el médico ya escribió. SUSANA la pone donde el jefe la ve.'],
-  ]
+  const [id, setId] = useState(TABLAS[0].id)
+  const activa = TABLAS.find((tabla) => tabla.id === id) ?? TABLAS[0]
+
   return (
     <div className="page">
       <header className="page-head">
         <div>
           <h1>Diccionario de datos</h1>
-          <p className="muted">De dónde sale cada número del pulso</p>
+          <p className="muted">Las tablas del backend y el campo del que sale cada número</p>
         </div>
       </header>
-      <section className="dict">
-        {filas.map(([titulo, texto]) => (
-          <article className="card" key={titulo}>
-            <h2>{titulo}</h2>
-            <p>{texto}</p>
-          </article>
-        ))}
+      <article className="card dict-lead">
+        <Cruz className="cross sm mint" />
+        <div>
+          <h2>Para qué está esta vista</h2>
+          <p>No calcula el turno. Nombra las tablas que ya guarda el backend, para saber de dónde sale una cama, una alerta, un medicamento o la frase del inicio.</p>
+        </div>
+      </article>
+      <section className="catalogo">
+        <article className="card catalogo-nav">
+          <header className="card-head"><h2>Tablas</h2></header>
+          {TABLAS.map((tabla) => (
+            <button
+              key={tabla.id}
+              type="button"
+              className={activa.id === tabla.id ? 'active' : ''}
+              aria-pressed={activa.id === tabla.id}
+              onClick={() => setId(tabla.id)}
+            >
+              <strong>{tabla.nombre}</strong>
+              <span>{tabla.vista}</span>
+            </button>
+          ))}
+        </article>
+        <article className="card">
+          <header className="card-head catalogo-head">
+            <div>
+              <p className="eyebrow">{activa.vista}</p>
+              <h2>{activa.nombre}</h2>
+            </div>
+            <span className="tag">{activa.campos.length} campos</span>
+          </header>
+          <p className="muted">{activa.para}</p>
+          <div className="campos">
+            {activa.campos.map((campo) => (
+              <div className="campo" key={campo.nombre}>
+                <code>{campo.nombre}</code>
+                <p>{campo.detalle}</p>
+              </div>
+            ))}
+          </div>
+        </article>
       </section>
     </div>
   )
@@ -687,33 +1138,48 @@ export function Diccionario() {
 export function Hospital() {
   return (
     <div className="page">
-      <header className="page-head">
-        <div>
-          <h1>El hospital</h1>
-          <p className="muted">Hospital Susana López de Valencia E.S.E. · Popayán, Cauca</p>
-        </div>
-      </header>
-      <section className="foto-card card">
-        <img src="/fachada-susana.png" alt="Edificio blanco del hospital, cruz verde y montañas del Cauca." />
-        <div>
-          <p className="eyebrow">Sede La Ladera</p>
-          <h2>Calle 15 No. 17A-196</h2>
-          <p>Popayán, Cauca. Código postal 190004. Lunes a viernes, de 7:00 a.m. a 5:00 p.m.</p>
-          <p className="muted">Inteligencia que cuida, decisiones que salvan.</p>
+      <section className="hero hospital-hero">
+        <img src="/fachada-susana.png" alt="Fachada del Hospital Susana López de Valencia, edificio blanco y montañas del Cauca." />
+        <div className="hero-veil" />
+        <div className="hero-copy">
+          <p className="eyebrow">E.S.E. · Popayán, Cauca</p>
+          <h1>Hospital Susana López de Valencia</h1>
+          <p>Inteligencia que cuida, decisiones que salvan.</p>
+          <div className="hero-pills">
+            <span>Sede La Ladera</span>
+            <span>Ciudad Blanca</span>
+            <span>CP 190004</span>
+          </div>
         </div>
       </section>
-      <section className="split">
-        <article className="card">
-          <header className="card-head"><h2>Sede San Camilo</h2></header>
-          <p>Carrera 8 No. 9-66, Popayán.</p>
-          <p className="muted">Lunes a viernes, de 7:00 a.m. a 5:00 p.m.</p>
+
+      <section className="sede-grid">
+        <article className="card sede-feature">
+          <img src="/pasillo-susana.png" alt="Pasillo del hospital con luz de la mañana." />
+          <div className="sede-copy">
+            <p className="eyebrow">Sede principal</p>
+            <h2>La Ladera</h2>
+            <p>Calle 15 No. 17A-196</p>
+            <p>Popayán, Cauca</p>
+            <span className="tag">Lunes a viernes · 7:00 a.m. a 5:00 p.m.</span>
+          </div>
         </article>
-        <article className="card">
-          <header className="card-head"><h2>Contacto</h2></header>
-          <p>(600) 838 636</p>
-          <p className="muted">(+57) 318 821 1483</p>
-        </article>
+        <div className="sede-side">
+          <article className="card sede-copy">
+            <span className="kpi-icon"><Icon name="hospital" /></span>
+            <h2>San Camilo</h2>
+            <p>Carrera 8 No. 9-66, Popayán.</p>
+            <p className="muted">Lunes a viernes, de 7:00 a.m. a 5:00 p.m.</p>
+          </article>
+          <article className="card sede-copy">
+            <span className="kpi-icon"><Icon name="pin" /></span>
+            <h2>Contacto</h2>
+            <p className="telefono">(600) 838 636</p>
+            <p className="telefono secundario">(+57) 318 821 1483</p>
+          </article>
+        </div>
       </section>
+
       <section className="principles in-page">
         {PRINCIPIOS.map(([titulo, detalle]) => (
           <div className="principle" key={titulo}>
@@ -724,6 +1190,14 @@ export function Hospital() {
             </div>
           </div>
         ))}
+      </section>
+
+      <section className="lema">
+        <div>
+          <strong>Mejores datos, mejores decisiones, una atención más humana.</strong>
+          <span>SUSANA IA · Centro de inteligencia operacional hospitalaria</span>
+        </div>
+        <Cruz className="cross sm" />
       </section>
     </div>
   )

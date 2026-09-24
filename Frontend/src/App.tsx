@@ -202,7 +202,14 @@ function App() {
           {page === 'quirofanos' && <Quirofanos quirofanos={quirofanos} />}
           {page === 'farmacia' && <Farmacia medicamentos={medicamentos} />}
           {page === 'alertas' && <Alertas alertas={alertas} />}
-          {page === 'reportes' && <Reportes pabellones={pabellones} urgencias={urgencias} medicamentos={medicamentos} />}
+          {page === 'reportes' && (
+            <Reportes
+              pabellones={pabellones}
+              urgencias={urgencias}
+              medicamentos={medicamentos}
+              quirofanos={quirofanos}
+            />
+          )}
           {page === 'diccionario' && <Diccionario />}
           {page === 'hospital' && <Hospital />}
         </main>

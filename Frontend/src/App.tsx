@@ -9,12 +9,11 @@ import {
   type Quirofano,
   type Urgencias,
 } from './api'
-import { ChatPanel, Cruz, Icon, Reloj, RobotFace, type IconName, type Mensaje } from './bits'
-import { Alertas, Camas, Diccionario, Farmacia, HomePublic, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './screens'
-import { Alertas, Camas, Diccionario, Farmacia, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './screens'
-import { MODULOS, PREGUNTAS, preguntasParaModulo, visualAna } from './ana'
+import { ChatPanel, Cruz, Icon, Reloj, RobotFace, type IconName, type Mensaje } from './components'
+import { MODULOS, PREGUNTAS, preguntasParaModulo, visualAna, type AnaPage } from './lib/ana'
+import { Alertas, Camas, Diccionario, Farmacia, HomePublic, Hospital, Inicio, Login, Quirofanos, Reportes, Urgencias as VistaUrgencias } from './pages'
 
-type Page = 'inicio' | 'camas' | 'urgencias' | 'quirofanos' | 'farmacia' | 'alertas' | 'diccionario' | 'reportes' | 'hospital'
+type Page = AnaPage
 
 const NAV: { id: Page; label: string; icon: IconName }[] = [
   { id: 'inicio', label: 'Inicio', icon: 'inicio' },

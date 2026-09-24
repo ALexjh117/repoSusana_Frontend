@@ -66,8 +66,10 @@ export type Pulso = {
   acciones: Accion[]
 }
 
+const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "")
+
 async function get<T>(path: string): Promise<T> {
-  const response = await fetch(path)
+  const response = await fetch(`${API}${path}`)
   if (!response.ok) throw new Error(path)
   return response.json() as Promise<T>
 }
@@ -81,7 +83,7 @@ export const api = {
   urgencias: () => get<Urgencias>("/api/urgencias"),
   acciones: () => get<Pulso>("/api/acciones"),
   marcarLimpia: async (id: number) => {
-    const response = await fetch(`/api/camas/${id}`, {
+    const response = await fetch(`${API}/api/camas/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ estado_cama: "DISPONIBLE" }),
@@ -90,7 +92,7 @@ export const api = {
     return response.json() as Promise<Cama>
   },
   preguntar: async (pregunta: string) => {
-    const response = await fetch("/api/query", {
+    const response = await fetch(`${API}/api/query`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pregunta }),
